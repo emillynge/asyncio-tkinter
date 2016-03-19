@@ -7,9 +7,10 @@ from tkevents import TkEventLoop
 from HardWork import *
 import concurrent.futures
 
-@asyncio.coroutine
-def async(it, *args):
-    return (yield from asyncio.get_event_loop().run_in_executor(None, it, *args))
+
+async def tk_async(it, *args):
+    return await asyncio.get_event_loop().run_in_executor(None, it, *args)
+
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -76,7 +77,6 @@ class Application(tk.Frame):
         print("The ten most common words: {0}".format(', '.join(most_common)))
         self.status[3]["text"] = "The ten most common words: {0}".format(', '.join(most_common))
 
-
     def do_count_with_callbacks(self):
         self.clear_status()
 
@@ -131,30 +131,29 @@ class Application(tk.Frame):
 
         future_words.add_done_callback(words_loaded)
 
-    @asyncio.coroutine
-    def do_count(self):
+    async def do_count(self):
         self.clear_status()
 
         print('Loading words on ', threading.get_ident())
-        words = yield from async(load_words, "Holmes.txt")
+        words = await tk_async(load_words, "Holmes.txt")
         print("{0} words loaded".format(len(words)))
         self.status[0]["text"] = "{0} words loaded".format(len(words))
 
         print('Cleaning on ', threading.get_ident())
         self.status[1]["text"] = "Cleaning..."
-        words = yield from async(clean_words, words)
+        words = await tk_async(clean_words, words)
         print("{0} remain after cleaning".format(len(words)))
         self.status[1]["text"] = "{0} remain after cleaning".format(len(words))
 
         print('Counting on', threading.get_ident())
         self.status[2]["text"] = "Counting..."
-        count = yield from async(count_words, words)
+        count = await tk_async(count_words, words)
         print("{0} distinct words after counting".format(len(count)))
         self.status[2]["text"] = "{0} distinct words after counting".format(len(count))
 
         print('Sorting on thread ', threading.get_ident())
         self.status[3]["text"] = "Sorting..."
-        most_common = yield from async(get_most_common, count, 10)
+        most_common = await tk_async(get_most_common, count, 10)
         print("The ten most common words: {0}".format(', '.join(most_common)))
         self.status[3]["text"] = "The ten most common words: {0}".format(', '.join(most_common))
 
